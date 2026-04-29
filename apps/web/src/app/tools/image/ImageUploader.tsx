@@ -88,7 +88,10 @@ async function sign(filename: string, contentType: string) {
 async function uploadFile(file: File) {
   const { url, objectUrl } = await sign(file.name, file.type);
   const response = await fetch(url, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
-  if (!response.ok) throw new Error(`Upload failed for ${file.name}`);
+  if (!response.ok) {
+    const details = await response.text().catch(() => "");
+    throw new Error(`Upload failed for ${file.name}${details ? `: ${details}` : ""}`);
+  }
   return objectUrl;
 }
 
