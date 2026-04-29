@@ -1,0 +1,15 @@
+/* apps/web/src/app/globals.css */
+
+/* 🔹 Styles de base Tailwind (si tu l’as configuré) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 🔹 Styles globaux facultatifs */
+html, body {
+  background-color: #0a0a0a;
+  color: white;
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+}

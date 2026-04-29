@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd ../.. && corepack pnpm --filter @alltools/web build",
+  "installCommand": "cd ../.. && corepack pnpm install --frozen-lockfile",
+  "framework": "nextjs"
+}

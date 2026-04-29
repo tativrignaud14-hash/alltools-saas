@@ -1,0 +1,26 @@
+{
+  "name": "@alltools/workers",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.665.0",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "bullmq": "^5.7.8",
+    "dotenv": "^17.2.3",
+    "execa": "^9.2.0",
+    "pdf-lib": "^1.17.1",
+    "sharp": "^0.34.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

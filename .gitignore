@@ -1,0 +1,32 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# testing
+coverage
+
+# production
+.next
+out
+dist
+packages/*/dist
+
+# misc
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+*.tsbuildinfo
+_tools/
+.storage/
+.storage-*/
+.integration-result.*
+apps/web/tmp/
+apps/web/uploads/
+apps/web/models/*.onnx
+models/*.onnx
+
+# python cache (if any)
+__pycache__/
