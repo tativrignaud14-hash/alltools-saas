@@ -22,3 +22,9 @@ services:
         sync: false
       - key: S3_PUBLIC_BASE_URL
         sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        sync: false

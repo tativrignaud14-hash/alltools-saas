@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { hasSupabaseConfig } from "./supabase-storage";
 
 const allowedTypes = new Set([
   "image/jpeg",
@@ -55,6 +56,14 @@ export async function getSignedPutUrl(filename: string, contentType: string) {
 
   const ext = filename.toLowerCase().match(/\.[a-z0-9]+$/)?.[0] || "";
   const key = `uploads/${Date.now()}-${crypto.randomUUID()}${ext}`;
+
+  if (hasSupabaseConfig() && !hasS3Config()) {
+    const encodedKey = encodeURIComponent(key);
+    return {
+      url: `/api/upload/supabase?key=${encodedKey}&contentType=${encodeURIComponent(contentType)}`,
+      objectUrl: `supabase://${key}`,
+    };
+  }
 
   if (!hasS3Config()) {
     const encodedKey = encodeURIComponent(key);

@@ -17,6 +17,35 @@ function hasS3Config() {
   );
 }
 
+function hasSupabaseConfig() {
+  return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.SUPABASE_BUCKET);
+}
+
+function supabaseUrl() {
+  return requiredEnv("SUPABASE_URL").replace(/\/$/, "");
+}
+
+function supabaseBucket() {
+  return requiredEnv("SUPABASE_BUCKET");
+}
+
+function supabaseHeaders(contentType?: string) {
+  const key = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
+  return {
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+    ...(contentType ? { "Content-Type": contentType } : {}),
+  };
+}
+
+function encodeStoragePath(key: string) {
+  return key.split("/").map(encodeURIComponent).join("/");
+}
+
+function publicSupabaseUrl(key: string) {
+  return `${supabaseUrl()}/storage/v1/object/public/${supabaseBucket()}/${encodeStoragePath(key)}`;
+}
+
 function getS3Client() {
   if (!s3) {
     s3 = new S3Client({
@@ -54,6 +83,29 @@ function localKeyFromUrl(url: string) {
   return null;
 }
 
+function supabaseKeyFromUrl(url: string) {
+  if (url.startsWith("supabase://")) {
+    return safeStorageKey(url.slice("supabase://".length));
+  }
+
+  if (hasSupabaseConfig()) {
+    const publicPrefix = `${supabaseUrl()}/storage/v1/object/public/${supabaseBucket()}/`;
+    const privatePrefix = `${supabaseUrl()}/storage/v1/object/${supabaseBucket()}/`;
+    if (url.startsWith(publicPrefix)) return safeStorageKey(decodeURIComponent(url.slice(publicPrefix.length)));
+    if (url.startsWith(privatePrefix)) return safeStorageKey(decodeURIComponent(url.slice(privatePrefix.length)));
+  }
+
+  return null;
+}
+
+function safeStorageKey(key: string) {
+  const normalized = key.replace(/\\/g, "/").replace(/^\/+/, "");
+  if (!/^(uploads|results)\//.test(normalized) || normalized.includes("..")) {
+    throw new Error("Invalid storage key");
+  }
+  return normalized;
+}
+
 function s3Base() {
   return requiredEnv("S3_PUBLIC_BASE_URL").replace(/\/$/, "");
 }
@@ -62,8 +114,11 @@ function keyFromUrl(url: string) {
   const localKey = localKeyFromUrl(url);
   if (localKey) return { type: "local" as const, key: localKey };
 
+  const supabaseKey = supabaseKeyFromUrl(url);
+  if (supabaseKey) return { type: "supabase" as const, key: supabaseKey };
+
   if (!hasS3Config()) {
-    throw new Error("S3/R2 is not configured and input URL is not local");
+    throw new Error("No storage provider is configured and input URL is not local");
   }
 
   const base = s3Base();
@@ -80,6 +135,15 @@ export async function downloadToFile(url: string, outPath: string) {
     return;
   }
 
+  if (ref.type === "supabase") {
+    const response = await fetch(`${supabaseUrl()}/storage/v1/object/${supabaseBucket()}/${encodeStoragePath(ref.key)}`, {
+      headers: supabaseHeaders(),
+    });
+    if (!response.ok) throw new Error(await response.text());
+    await writeFile(outPath, Buffer.from(await response.arrayBuffer()));
+    return;
+  }
+
   const obj = await getS3Client().send(new GetObjectCommand({ Bucket: requiredEnv("S3_BUCKET"), Key: ref.key }));
   await streamToFile(obj.Body as Readable, outPath);
 }
@@ -90,6 +154,14 @@ export async function downloadBuffer(url: string) {
     return readFile(path.join(localStorageRoot(), ref.key));
   }
 
+  if (ref.type === "supabase") {
+    const response = await fetch(`${supabaseUrl()}/storage/v1/object/${supabaseBucket()}/${encodeStoragePath(ref.key)}`, {
+      headers: supabaseHeaders(),
+    });
+    if (!response.ok) throw new Error(await response.text());
+    return Buffer.from(await response.arrayBuffer());
+  }
+
   const obj = await getS3Client().send(new GetObjectCommand({ Bucket: requiredEnv("S3_BUCKET"), Key: ref.key }));
   return Buffer.from(await (obj.Body as any).transformToByteArray());
 }
@@ -98,6 +170,19 @@ export async function uploadBuffer(buf: Buffer, contentType: string, ext = "bin"
   const key = `results/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext.replace(/^\./, "")}`;
 
   if (!hasS3Config()) {
+    if (hasSupabaseConfig()) {
+      const response = await fetch(`${supabaseUrl()}/storage/v1/object/${supabaseBucket()}/${encodeStoragePath(key)}`, {
+        method: "POST",
+        headers: {
+          ...supabaseHeaders(contentType),
+          "x-upsert": "true",
+        },
+        body: new Uint8Array(buf),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      return publicSupabaseUrl(key);
+    }
+
     const filePath = path.join(localStorageRoot(), key);
     await mkdir(path.dirname(filePath), { recursive: true });
     await writeFile(filePath, buf);
@@ -112,6 +197,20 @@ export async function uploadLocalFile(filePath: string, contentType: string, ext
   const key = `results/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext.replace(/^\./, "")}`;
 
   if (!hasS3Config()) {
+    if (hasSupabaseConfig()) {
+      const body = await readFile(filePath);
+      const response = await fetch(`${supabaseUrl()}/storage/v1/object/${supabaseBucket()}/${encodeStoragePath(key)}`, {
+        method: "POST",
+        headers: {
+          ...supabaseHeaders(contentType),
+          "x-upsert": "true",
+        },
+        body: new Uint8Array(body),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      return publicSupabaseUrl(key);
+    }
+
     const outputPath = path.join(localStorageRoot(), key);
     await mkdir(path.dirname(outputPath), { recursive: true });
     await copyFile(filePath, outputPath);

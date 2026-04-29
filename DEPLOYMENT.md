@@ -5,13 +5,22 @@
 - Web Next.js: Vercel, projet racine `apps/web`.
 - Worker BullMQ: Render Background Worker via `render.yaml`.
 - Redis: Upstash Redis avec URL `rediss://...`.
-- Fichiers: Cloudflare R2 ou S3 compatible.
+- Fichiers: Supabase Storage, Cloudflare R2 ou S3 compatible.
 
 ## Variables a mettre sur Vercel et Render
 
 Les deux services ont besoin des memes variables:
 
 - `REDIS_URL`
+
+Pour Supabase Storage:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_BUCKET`
+
+Ou, pour S3/R2:
+
 - `S3_REGION`
 - `S3_ENDPOINT`
 - `S3_BUCKET`
@@ -19,7 +28,7 @@ Les deux services ont besoin des memes variables:
 - `S3_SECRET_ACCESS_KEY`
 - `S3_PUBLIC_BASE_URL`
 
-Ne mets pas `ALLTOOLS_STORAGE_DIR` ni `ALLTOOLS_ALLOW_LOCAL_JOBS` en production, sauf pour un test volontaire sans Redis/S3.
+Ne mets pas `ALLTOOLS_STORAGE_DIR` ni `ALLTOOLS_ALLOW_LOCAL_JOBS` en production, sauf pour un test volontaire sans Redis/S3/Supabase.
 
 ## Vercel
 
