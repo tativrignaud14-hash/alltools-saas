@@ -14,6 +14,7 @@ dotenv.config({ path: envPath });
 
 const connection = {
   url: requiredEnv("REDIS_URL"),
+  tls: requiredEnv("REDIS_URL").startsWith("rediss://") || requiredEnv("REDIS_URL").includes("upstash.io") ? {} : undefined,
   maxRetriesPerRequest: null,
   enableReadyCheck: false,
 };

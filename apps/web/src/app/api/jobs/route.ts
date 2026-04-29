@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getQueue } from "@/lib/queue";
+import { getQueue, resetQueue } from "@/lib/queue";
 import { createLocalJob } from "@/lib/local-jobs";
 
 const allowedJobTypes = new Set([
@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({ id: job.id, status: "queued" });
     } catch (err) {
+      await resetQueue();
       const localFallbackAllowed = process.env.ALLTOOLS_ALLOW_LOCAL_JOBS || process.env.ALLTOOLS_STORAGE_DIR;
       if (process.env.NODE_ENV === "production" && !localFallbackAllowed) {
         throw err;
