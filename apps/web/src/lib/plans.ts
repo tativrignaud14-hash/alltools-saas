@@ -1,0 +1,63 @@
+export const plans = [
+  {
+    name: "Free",
+    price: "0 EUR",
+    cadence: "pour toujours",
+    badge: "Sans compte obligatoire",
+    audience: "Tester vite, petits fichiers",
+    limits: ["5 traitements / jour", "10 MB max", "Stockage 2 h", "Image + PDF legers", "Pas d'historique"],
+    cta: "Utiliser gratuitement",
+  },
+  {
+    name: "Starter",
+    price: "4,99 EUR",
+    cadence: "par mois",
+    badge: "Particuliers",
+    audience: "Usage regulier simple",
+    limits: ["100 traitements / mois", "50 MB max", "Historique 7 jours", "Batch leger", "Image + PDF avances"],
+    cta: "Passer Starter",
+  },
+  {
+    name: "Pro",
+    price: "9,99 EUR",
+    cadence: "par mois",
+    badge: "Meilleur choix",
+    audience: "Createurs, freelances, pros",
+    limits: ["1 000 traitements / mois", "250 MB max", "Audio/video FFmpeg", "Historique 30 jours", "Sans watermark"],
+    cta: "Passer Pro",
+  },
+  {
+    name: "AI Pro",
+    price: "19,99 EUR",
+    cadence: "par mois",
+    badge: "IA incluse",
+    audience: "PDF IA, OCR, image IA",
+    limits: ["Tout Pro", "Credits IA inclus", "Chat PDF + resume", "OCR + traduction", "Suppression fond/restauration"],
+    cta: "Passer AI Pro",
+  },
+  {
+    name: "Business",
+    price: "39 EUR",
+    cadence: "par mois",
+    badge: "Equipe",
+    audience: "Petites equipes",
+    limits: ["3 utilisateurs inclus", "5 000 traitements / mois", "1 GB max", "Historique 90 jours", "Admin + facturation"],
+    cta: "Passer Business",
+  },
+  {
+    name: "Enterprise",
+    price: "Sur devis",
+    cadence: "volume eleve",
+    badge: "Sur mesure",
+    audience: "Grandes equipes et API",
+    limits: ["SSO", "API", "Stockage dedie", "Quotas personnalises", "DPA / RGPD"],
+    cta: "Contacter",
+  },
+];
+
+export const freeRules = {
+  dailyJobs: 5,
+  maxFileMb: 10,
+  retention: "2 h",
+  accountRequired: "Non pour tester. Oui pour historique, gros fichiers, IA, audio/video et equipes.",
+};

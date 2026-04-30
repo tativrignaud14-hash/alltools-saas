@@ -1,4 +1,5 @@
 import MediaUploader from "../media/MediaUploader";
+import { FreemiumNotice } from "@/components/FreemiumNotice";
 
 export default function AudioToolsPage() {
   return (
@@ -9,6 +10,7 @@ export default function AudioToolsPage() {
           Conversion, compression, decoupe, fusion, normalisation, silence et outils IA audio.
         </p>
       </section>
+      <FreemiumNotice heavy />
       <MediaUploader kind="audio" />
     </div>
   );

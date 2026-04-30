@@ -1,4 +1,5 @@
 import PdfUploader from "./PdfUploader";
+import { FreemiumNotice } from "@/components/FreemiumNotice";
 
 export default function PdfToolsPage() {
   return (
@@ -9,6 +10,7 @@ export default function PdfToolsPage() {
           Fusion, division, pages, watermark, numerotation, conversion, business, analyse et outils IA.
         </p>
       </section>
+      <FreemiumNotice />
       <PdfUploader />
     </div>
   );

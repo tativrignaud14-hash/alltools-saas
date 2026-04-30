@@ -1,4 +1,5 @@
 import MediaUploader from "../media/MediaUploader";
+import { FreemiumNotice } from "@/components/FreemiumNotice";
 
 export default function VideoToolsPage() {
   return (
@@ -9,6 +10,7 @@ export default function VideoToolsPage() {
           Compression, conversion, decoupe, fusion, GIF, frames, watermark, sous-titres et export.
         </p>
       </section>
+      <FreemiumNotice heavy />
       <MediaUploader kind="video" />
     </div>
   );

@@ -1,4 +1,5 @@
 import ImageUploader from "@/app/tools/image/ImageUploader";
+import { FreemiumNotice } from "@/components/FreemiumNotice";
 
 export default function ImageToolsPage() {
   return (
@@ -9,6 +10,9 @@ export default function ImageToolsPage() {
           Conversion, compression, resize, crop, lots ZIP, watermark, fond, reseaux sociaux, e-commerce, EXIF,
           palette, floutage, pixelisation et outils IA.
         </p>
+      </div>
+      <div className="mb-6">
+        <FreemiumNotice />
       </div>
       <ImageUploader tool="convert" />
     </main>
