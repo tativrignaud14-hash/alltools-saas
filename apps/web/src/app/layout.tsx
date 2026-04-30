@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <Link href="/video/extract-audio" className="hover:text-white transition">
                 Video
               </Link>
-              <Link href="/pdf/merge" className="hover:text-white transition">
+              <Link href="/tools/pdf" className="hover:text-white transition">
                 PDF
               </Link>
             </nav>

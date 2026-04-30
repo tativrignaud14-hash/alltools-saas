@@ -3,7 +3,7 @@ import Link from "next/link";
 const tools = [
   { href: "/tools/image", title: "Atelier image complet", cat: "Image" },
   { href: "/video/extract-audio", title: "Extraire l'audio d'une video", cat: "Video" },
-  { href: "/pdf/merge", title: "Fusionner PDF", cat: "PDF" },
+  { href: "/tools/pdf", title: "Atelier PDF complet", cat: "PDF" },
 ];
 
 export default function HomePage() {

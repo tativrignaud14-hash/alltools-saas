@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getQueue, resetQueue } from "@/lib/queue";
 import { createLocalJob } from "@/lib/local-jobs";
 import { processDirectImageJob } from "@/lib/direct-image";
+import { processDirectPdfJob } from "@/lib/direct-pdf";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ const allowedJobTypes = new Set([
   "image:tool",
   "image:upscale",
   "pdf:merge",
+  "pdf:tool",
   "video:extract-audio",
 ]);
 
@@ -43,6 +45,18 @@ export async function POST(req: NextRequest) {
       const result = await processDirectImageJob({ inputUrl, options: directOptions });
       return NextResponse.json({
         id: `direct-${Date.now()}`,
+        status: "completed",
+        state: "completed",
+        mode: "direct",
+        result,
+      });
+    }
+
+    if (type.startsWith("pdf:")) {
+      const directOptions = type === "pdf:merge" ? { ...(options || {}), tool: "merge" } : options || {};
+      const result = await processDirectPdfJob({ inputUrl, options: directOptions });
+      return NextResponse.json({
+        id: `direct-pdf-${Date.now()}`,
         status: "completed",
         state: "completed",
         mode: "direct",
