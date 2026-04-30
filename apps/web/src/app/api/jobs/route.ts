@@ -3,6 +3,9 @@ import { getQueue, resetQueue } from "@/lib/queue";
 import { createLocalJob } from "@/lib/local-jobs";
 import { processDirectImageJob } from "@/lib/direct-image";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 const allowedJobTypes = new Set([
   "image:compress",
   "image:convert",
@@ -26,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     const data = { inputUrl, options };
 
-    if (type === "image:tool" || type === "image:convert" || type === "image:compress" || type === "image:upscale") {
+    if (type.startsWith("image:")) {
       const directOptions =
         type === "image:tool"
           ? options || {}
@@ -34,11 +37,14 @@ export async function POST(req: NextRequest) {
           ? { ...(options || {}), tool: "convert" }
           : type === "image:compress"
           ? { ...(options || {}), tool: "weight-target" }
+          : type === "image:remove-bg"
+          ? { ...(options || {}), tool: "remove-bg" }
           : { ...(options || {}), tool: "resize", width: 1600, height: 1600 };
       const result = await processDirectImageJob({ inputUrl, options: directOptions });
       return NextResponse.json({
         id: `direct-${Date.now()}`,
         status: "completed",
+        state: "completed",
         mode: "direct",
         result,
       });

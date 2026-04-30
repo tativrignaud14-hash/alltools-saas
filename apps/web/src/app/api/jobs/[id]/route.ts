@@ -3,6 +3,9 @@ import { Job } from "bullmq";
 import { getQueue } from "@/lib/queue";
 import { getLocalJob } from "@/lib/local-jobs";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const localJob = await getLocalJob(params.id);
   if (localJob) {
