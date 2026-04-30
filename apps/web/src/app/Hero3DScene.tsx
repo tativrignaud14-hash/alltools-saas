@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-const colors = [0x2f6bff, 0x27d17f, 0xf5b84b, 0xff5c7a, 0x8bd3ff];
+const colors = [0x00e5ff, 0xd8ff4f, 0xff5a5f, 0x7c5cff, 0xffb000];
 
 export default function Hero3DScene() {
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -13,8 +13,8 @@ export default function Hero3DScene() {
     if (!host) return;
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-    camera.position.set(0, 0.8, 8);
+    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+    camera.position.set(0, 0.5, 9.2);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
@@ -27,7 +27,7 @@ export default function Hero3DScene() {
     const ambient = new THREE.AmbientLight(0xffffff, 1.4);
     scene.add(ambient);
     const key = new THREE.DirectionalLight(0xffffff, 2.4);
-    key.position.set(4, 6, 5);
+    key.position.set(5, 7, 6);
     scene.add(key);
 
     const coreGeometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
@@ -35,19 +35,19 @@ export default function Hero3DScene() {
       color: 0xffffff,
       metalness: 0.48,
       roughness: 0.24,
-      emissive: 0x1d2745,
-      emissiveIntensity: 0.25,
+      emissive: 0x071322,
+      emissiveIntensity: 0.35,
     });
     const core = new THREE.Mesh(coreGeometry, coreMaterial);
     group.add(core);
 
     const rings: THREE.Mesh[] = [];
-    for (let index = 0; index < 5; index++) {
-      const geometry = new THREE.TorusGeometry(1.72 + index * 0.36, 0.012, 8, 96);
+    for (let index = 0; index < 7; index++) {
+      const geometry = new THREE.TorusGeometry(1.82 + index * 0.34, 0.01, 8, 112);
       const material = new THREE.MeshBasicMaterial({
         color: colors[index],
         transparent: true,
-        opacity: 0.44,
+        opacity: 0.54,
       });
       const ring = new THREE.Mesh(geometry, material);
       ring.rotation.x = Math.PI / 2 + index * 0.16;
@@ -57,8 +57,8 @@ export default function Hero3DScene() {
     }
 
     const nodes: THREE.Mesh[] = [];
-    for (let index = 0; index < 42; index++) {
-      const geometry = new THREE.BoxGeometry(0.16, 0.16, 0.16);
+    for (let index = 0; index < 68; index++) {
+      const geometry = new THREE.BoxGeometry(0.13, 0.13, 0.13);
       const material = new THREE.MeshStandardMaterial({
         color: colors[index % colors.length],
         emissive: colors[index % colors.length],
@@ -68,15 +68,15 @@ export default function Hero3DScene() {
       });
       const node = new THREE.Mesh(geometry, material);
       const angle = index * 1.19;
-      const radius = 2.2 + (index % 7) * 0.32;
-      node.position.set(Math.cos(angle) * radius, Math.sin(index * 0.7) * 1.35, Math.sin(angle) * radius);
+      const radius = 2.1 + (index % 9) * 0.34;
+      node.position.set(Math.cos(angle) * radius, Math.sin(index * 0.7) * 1.65, Math.sin(angle) * radius);
       node.rotation.set(index * 0.12, index * 0.2, index * 0.08);
       nodes.push(node);
       group.add(node);
     }
 
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.18 });
-    for (let index = 0; index < nodes.length; index += 3) {
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.16 });
+    for (let index = 0; index < nodes.length; index += 2) {
       const points = [nodes[index].position, nodes[(index + 8) % nodes.length].position];
       group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), lineMaterial));
     }
@@ -94,9 +94,9 @@ export default function Hero3DScene() {
 
     let raf = 0;
     const animate = () => {
-      frame += 0.01;
-      group.rotation.y = frame * 0.42;
-      group.rotation.x = Math.sin(frame * 0.7) * 0.16;
+      frame += 0.011;
+      group.rotation.y = frame * 0.5;
+      group.rotation.x = Math.sin(frame * 0.7) * 0.2;
       core.rotation.x += 0.012;
       core.rotation.y += 0.017;
       rings.forEach((ring, index) => {

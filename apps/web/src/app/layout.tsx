@@ -6,10 +6,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr">
       <body className="min-h-screen text-gray-100 font-sans">
-        <header className="sticky top-0 z-40 border-b border-white/10 bg-[#08090a]/82 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
+        <header className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(7,10,18,0.76)] backdrop-blur-2xl">
+          <div className="flex w-full items-center justify-between gap-4 px-4 py-3 md:px-7">
             <Link href="/" className="group flex items-center gap-3 font-semibold text-white">
-              <span className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white text-sm font-black text-black transition group-hover:scale-105">
+              <span className="grid h-9 w-9 place-items-center rounded-lg border border-white/15 bg-[#d8ff4f] text-sm font-black text-[#070a12] transition group-hover:scale-105">
                 A
               </span>
               <span className="text-lg tracking-tight">AllTools</span>
@@ -30,17 +30,17 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <Link href="/tools/audio" className="rounded-md px-3 py-2 transition hover:bg-white/10 hover:text-white">
                 Audio
               </Link>
-              <Link href="/pricing" className="rounded-md bg-white px-3 py-2 font-medium text-black transition hover:bg-blue-200">
+              <Link href="/pricing" className="rounded-md bg-[#00e5ff] px-3 py-2 font-medium text-[#041015] transition hover:bg-[#d8ff4f]">
                 Pricing
               </Link>
             </nav>
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl px-4 py-10 md:py-14">{children}</main>
+        <main className="w-full px-4 py-8 md:px-7 md:py-10">{children}</main>
 
-        <footer className="mt-16 border-t border-white/10 text-center">
-          <div className="mx-auto max-w-7xl px-4 py-7 text-sm text-gray-500">
+        <footer className="mt-10 border-t border-white/10 text-center">
+          <div className="px-4 py-7 text-sm text-gray-500">
             (c) {new Date().getFullYear()} <span className="text-white">AllTools</span> - Fichiers supprimes automatiquement sous 2 h.
           </div>
         </footer>
