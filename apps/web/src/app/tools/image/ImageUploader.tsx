@@ -102,7 +102,7 @@ async function createJob(type: string, inputUrl: string, options: Record<string,
     body: JSON.stringify({ type, inputUrl, options }),
   });
   if (!response.ok) throw new Error("Job creation failed");
-  return response.json() as Promise<{ id: string }>;
+  return response.json() as Promise<{ id: string; result?: { outputUrl?: string } }>;
 }
 
 async function pollJob(id: string) {
@@ -195,8 +195,8 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
 
       const type = directJobs[selectedTool] || "image:tool";
       const options = buildOptions(inputUrls);
-      const { id } = await createJob(type, inputUrls[0], options);
-      const resultUrl = await pollJob(id);
+      const job = await createJob(type, inputUrls[0], options);
+      const resultUrl = job.result?.outputUrl || (await pollJob(job.id));
 
       setOutputUrl(resultUrl);
       setStatus("done");
