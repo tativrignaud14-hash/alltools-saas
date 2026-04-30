@@ -12,14 +12,23 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               AllTools
             </Link>
             <nav className="flex gap-6 text-sm text-gray-300">
+              <Link href="/dashboard" className="hover:text-white transition">
+                Dashboard
+              </Link>
               <Link href="/tools/image" className="hover:text-white transition">
                 Image
               </Link>
-              <Link href="/video/extract-audio" className="hover:text-white transition">
+              <Link href="/tools/video" className="hover:text-white transition">
                 Video
               </Link>
               <Link href="/tools/pdf" className="hover:text-white transition">
                 PDF
+              </Link>
+              <Link href="/tools/audio" className="hover:text-white transition">
+                Audio
+              </Link>
+              <Link href="/pricing" className="hover:text-white transition">
+                Pricing
               </Link>
             </nav>
           </div>

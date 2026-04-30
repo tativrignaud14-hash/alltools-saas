@@ -2,8 +2,13 @@ import Link from "next/link";
 
 const tools = [
   { href: "/tools/image", title: "Atelier image complet", cat: "Image" },
-  { href: "/video/extract-audio", title: "Extraire l'audio d'une video", cat: "Video" },
+  { href: "/tools/video", title: "Atelier video complet", cat: "Video" },
+  { href: "/tools/audio", title: "Atelier audio complet", cat: "Audio" },
   { href: "/tools/pdf", title: "Atelier PDF complet", cat: "PDF" },
+  { href: "/dashboard", title: "Tableau de bord SaaS", cat: "SaaS" },
+  { href: "/files", title: "Mes fichiers", cat: "SaaS" },
+  { href: "/pricing", title: "Pricing", cat: "SaaS" },
+  { href: "/admin", title: "Admin", cat: "SaaS" },
 ];
 
 export default function HomePage() {
@@ -11,7 +16,7 @@ export default function HomePage() {
     <div>
       <h1 className="text-3xl font-semibold mb-6">Boite a outils fichiers</h1>
       <p className="text-gray-400 mb-8">
-        Upload direct S3/R2, traitement cote worker, resultats prets a telecharger.
+        Image, PDF, audio, video et espace SaaS avec resultats prets a telecharger.
       </p>
       <div className="grid sm:grid-cols-2 gap-4">
         {tools.map((tool) => (

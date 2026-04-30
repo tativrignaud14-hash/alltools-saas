@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type ToolKey =
   | "convert"
@@ -24,6 +24,10 @@ type ToolKey =
   | "auto-enhance"
   | "denoise"
   | "restore"
+  | "before-after"
+  | "mockup"
+  | "rename"
+  | "social-pack"
   | "colorize"
   | "product-background-ai";
 
@@ -52,6 +56,10 @@ const tools: ToolConfig[] = [
   { key: "pixelate", label: "Pixeliser une zone", group: "Confidentialite" },
   { key: "weight-target", label: "Poids cible", group: "Export" },
   { key: "marketplace", label: "Pack marketplace", group: "E-commerce" },
+  { key: "before-after", label: "Apercu avant/apres", group: "Workflow" },
+  { key: "rename", label: "Renommage auto", group: "Workflow" },
+  { key: "social-pack", label: "Pack social ZIP", group: "Workflow", multi: true },
+  { key: "mockup", label: "Mockup produit", group: "Workflow", aiExternal: true },
   { key: "remove-bg", label: "Supprimer fond IA", group: "IA" },
   { key: "upscale", label: "Upscale", group: "IA" },
   { key: "auto-enhance", label: "Amelioration auto", group: "IA" },
@@ -137,6 +145,8 @@ function groupedTools() {
 export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) {
   const [selectedTool, setSelectedTool] = useState<ToolKey>(tool);
   const [files, setFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [status, setStatus] = useState<"idle" | "upload" | "processing" | "done" | "error">("idle");
   const [message, setMessage] = useState("");
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
@@ -152,9 +162,16 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
   const [preset, setPreset] = useState("instagram-square");
   const [marketplacePreset, setMarketplacePreset] = useState("shopify");
   const [targetKb, setTargetKb] = useState(500);
+  const [outputName, setOutputName] = useState("alltools-result");
   const [zone, setZone] = useState({ x: 0, y: 0, w: 400, h: 300 });
 
   const disabled = status === "upload" || status === "processing";
+
+  useEffect(() => {
+    const urls = files.map((file) => URL.createObjectURL(file));
+    setPreviewUrls(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [files]);
 
   function buildOptions(inputUrls: string[]) {
     const toolName = selectedTool;
@@ -177,8 +194,27 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
     if (toolName === "compress") Object.assign(options, { quality });
     if (toolName === "convert") Object.assign(options, { outputFormat: format, quality });
     if (toolName === "upscale") Object.assign(options, { scale: 2 });
+    if (toolName === "before-after" || toolName === "rename") Object.assign(options, { tool: "convert", outputName });
+    if (toolName === "social-pack") Object.assign(options, { tool: "batch-convert", format, outputFormat: format });
 
     return options;
+  }
+
+  function addFiles(nextFiles: File[]) {
+    const accepted = nextFiles.filter((file) => file.type.startsWith("image/"));
+    setFiles((prev) => (config.multi ? [...prev, ...accepted] : accepted.slice(0, 1)));
+    setOutputUrl(null);
+    setMessage("");
+    setStatus("idle");
+  }
+
+  function moveFile(from: number, to: number) {
+    setFiles((prev) => {
+      const copy = [...prev];
+      const [item] = copy.splice(from, 1);
+      copy.splice(to, 0, item);
+      return copy;
+    });
   }
 
   async function run() {
@@ -253,13 +289,61 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
         </div>
 
         <input
+          id="image-file-input"
           type="file"
           multiple={config.multi}
           accept="image/jpeg,image/png,image/webp,image/avif"
           disabled={disabled}
-          onChange={(event) => setFiles(Array.from(event.target.files || []))}
-          className="mb-5 block w-full text-sm text-neutral-200"
+          onChange={(event) => addFiles(Array.from(event.target.files || []))}
+          className="sr-only"
         />
+
+        <label
+          htmlFor="image-file-input"
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={(event) => {
+            event.preventDefault();
+            addFiles(Array.from(event.dataTransfer.files || []));
+          }}
+          className="mb-5 flex min-h-28 cursor-pointer items-center justify-center rounded-lg border border-dashed border-neutral-700 bg-neutral-950 px-4 text-center text-sm text-neutral-300 hover:border-blue-500"
+        >
+          Deposer les images ici ou cliquer pour choisir
+        </label>
+
+        {!!files.length && (
+          <div className="mb-5 grid gap-3 md:grid-cols-2">
+            {files.map((file, index) => (
+              <div
+                key={`${file.name}-${file.size}-${index}`}
+                draggable
+                onDragStart={() => setDraggedIndex(index)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => {
+                  if (draggedIndex !== null) moveFile(draggedIndex, index);
+                  setDraggedIndex(null);
+                }}
+                className="rounded-lg border border-neutral-800 bg-neutral-950 p-3"
+              >
+                {previewUrls[index] && <img src={previewUrls[index]} alt="" className="mb-3 aspect-video w-full rounded bg-black object-contain" />}
+                <div className="truncate text-sm text-neutral-300">{index + 1}. {file.name}</div>
+                <div className="text-xs text-neutral-500">glisser pour reorganiser</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {previewUrls[0] && outputUrl && (
+          <div className="mb-5 grid gap-4 md:grid-cols-2">
+            <div className="rounded-lg border border-neutral-800 bg-neutral-950 p-3">
+              <div className="mb-2 text-xs uppercase text-neutral-500">Avant</div>
+              <img src={previewUrls[0]} alt="" className="aspect-video w-full object-contain" />
+            </div>
+            <div className="rounded-lg border border-neutral-800 bg-neutral-950 p-3">
+              <div className="mb-2 text-xs uppercase text-neutral-500">Apres</div>
+              <img src={outputUrl} alt="" className="aspect-video w-full object-contain" />
+            </div>
+          </div>
+        )}
 
         <div className="mb-5 grid gap-4 md:grid-cols-2">
           {["convert", "batch-convert", "compress", "batch-compress", "resize", "crop", "social", "watermark", "weight-target", "auto-enhance", "denoise", "restore"].includes(selectedTool) && (
@@ -333,6 +417,13 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
             <label className="grid gap-1 text-sm">
               Poids cible KB
               <input type="number" min={10} value={targetKb} onChange={(event) => setTargetKb(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+            </label>
+          )}
+
+          {selectedTool === "rename" && (
+            <label className="grid gap-1 text-sm">
+              Nom de sortie
+              <input value={outputName} onChange={(event) => setOutputName(event.target.value)} className="rounded-lg bg-neutral-950 p-2" />
             </label>
           )}
 
