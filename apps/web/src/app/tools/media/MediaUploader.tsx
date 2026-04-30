@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type ToolConfig = {
   key: string;
@@ -47,9 +47,17 @@ export default function MediaUploader({ kind }: { kind: "audio" | "video" }) {
   const tools = kind === "audio" ? audioTools : videoTools;
   const [selected, setSelected] = useState(tools[0].key);
   const [files, setFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const groups = useMemo(() => grouped(tools), [tools]);
   const config = tools.find((tool) => tool.key === selected) || tools[0];
+
+  useEffect(() => {
+    const urls = files.map((file) => URL.createObjectURL(file));
+    setPreviewUrls(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [files]);
 
   function addFiles(next: File[]) {
     const accepted = next.filter((file) => {
@@ -58,6 +66,15 @@ export default function MediaUploader({ kind }: { kind: "audio" | "video" }) {
     });
     setFiles(config.multi ? [...files, ...accepted] : accepted.slice(0, 1));
     setMessage("");
+  }
+
+  function moveFile(from: number, to: number) {
+    setFiles((prev) => {
+      const copy = [...prev];
+      const [item] = copy.splice(from, 1);
+      copy.splice(to, 0, item);
+      return copy;
+    });
   }
 
   function run() {
@@ -125,8 +142,23 @@ export default function MediaUploader({ kind }: { kind: "audio" | "video" }) {
         {!!files.length && (
           <ul className="mb-5 space-y-2 text-sm text-neutral-300">
             {files.map((file, index) => (
-              <li key={`${file.name}-${file.size}-${index}`} className="rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2">
-                {index + 1}. {file.name}
+              <li
+                key={`${file.name}-${file.size}-${index}`}
+                draggable
+                onDragStart={() => setDraggedIndex(index)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => {
+                  if (draggedIndex !== null) moveFile(draggedIndex, index);
+                  setDraggedIndex(null);
+                }}
+                className="rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2"
+              >
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <span className="truncate">{index + 1}. {file.name}</span>
+                  <span className="text-xs text-neutral-500">glisser</span>
+                </div>
+                {previewUrls[index] && kind === "audio" && <audio controls src={previewUrls[index]} className="w-full" />}
+                {previewUrls[index] && kind === "video" && <video controls src={previewUrls[index]} className="aspect-video w-full rounded bg-black" />}
               </li>
             ))}
           </ul>
