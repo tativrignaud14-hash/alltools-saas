@@ -116,6 +116,16 @@ async function pollJob(id: string) {
   throw new Error("Processing timed out");
 }
 
+function downloadResult(url: string) {
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "";
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
 function groupedTools() {
   return tools.reduce<Record<string, ToolConfig[]>>((acc, tool) => {
     acc[tool.group] = acc[tool.group] || [];
@@ -200,7 +210,8 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
 
       setOutputUrl(resultUrl);
       setStatus("done");
-      setMessage("Resultat pret.");
+      setMessage("Resultat pret. Telechargement lance automatiquement.");
+      downloadResult(resultUrl);
     } catch (error) {
       console.error(error);
       setStatus("error");
