@@ -34,6 +34,17 @@ function parseOrder(input: unknown, total: number) {
   return parsed.length ? parsed : Array.from({ length: total }, (_, index) => index);
 }
 
+function targetPage(pdf: PDFDocument, options: PdfOptions) {
+  const pageNumber = Math.trunc(clamp(options.page, 1, 1, pdf.getPageCount()));
+  return pdf.getPage(pageNumber - 1);
+}
+
+function dataUrlToBuffer(value: unknown) {
+  const text = String(value || "");
+  const base64 = text.includes(",") ? text.split(",").pop() || "" : text;
+  return Buffer.from(base64, "base64");
+}
+
 async function loadPdf(url: string) {
   return PDFDocument.load(await downloadBuffer(url), { ignoreEncryption: true });
 }
@@ -246,6 +257,78 @@ async function protectedAction(inputUrl: string, options: PdfOptions) {
   return savePdf(pdf);
 }
 
+async function advancedEdit(inputUrls: string[], options: PdfOptions) {
+  const pdf = await loadPdf(inputUrls[0]);
+  const page = targetPage(pdf, options);
+  const { width, height } = page.getSize();
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const x = clamp(options.x, 64, 0, width);
+  const y = clamp(options.y, 120, 0, height);
+  const boxWidth = clamp(options.boxWidth, 220, 1, width);
+  const boxHeight = clamp(options.boxHeight, 80, 1, height);
+  const tool = String(options.tool);
+
+  if (tool === "add-text") {
+    page.drawText(String(options.text || "Texte"), {
+      x,
+      y,
+      size: clamp(options.size, 14, 6, 96),
+      font,
+      color: rgb(0.05, 0.05, 0.05),
+    });
+  }
+
+  if (tool === "redact") {
+    page.drawRectangle({ x, y, width: boxWidth, height: boxHeight, color: rgb(0, 0, 0) });
+  }
+
+  if (tool === "checkbox") {
+    const size = clamp(options.size, 18, 8, 48);
+    page.drawRectangle({ x, y, width: size, height: size, borderColor: rgb(0, 0, 0), borderWidth: 1.5, color: rgb(1, 1, 1) });
+    if (options.checked !== false) {
+      page.drawLine({ start: { x: x + 4, y: y + size / 2 }, end: { x: x + size / 2, y: y + 4 }, thickness: 2, color: rgb(0, 0, 0) });
+      page.drawLine({ start: { x: x + size / 2, y: y + 4 }, end: { x: x + size - 3, y: y + size - 3 }, thickness: 2, color: rgb(0, 0, 0) });
+    }
+    if (options.text) page.drawText(String(options.text), { x: x + size + 8, y: y + 3, size: 11, font, color: rgb(0.05, 0.05, 0.05) });
+  }
+
+  if (tool === "draw-signature") {
+    const signature = dataUrlToBuffer(options.signatureData);
+    if (!signature.length) throw new Error("Dessine une signature avant de lancer.");
+    const image = await pdf.embedPng(signature);
+    const signatureWidth = clamp(options.boxWidth, 220, 80, width);
+    const signatureHeight = (image.height / image.width) * signatureWidth;
+    page.drawImage(image, { x, y, width: signatureWidth, height: signatureHeight });
+  }
+
+  if (tool === "add-logo") {
+    if (inputUrls.length < 2) throw new Error("Ajoute un PDF puis une image/logo.");
+    const imageBytes = await downloadBuffer(inputUrls[1]);
+    const logo = inputUrls[1].toLowerCase().includes(".png") ? await pdf.embedPng(imageBytes) : await pdf.embedJpg(imageBytes);
+    const logoWidth = clamp(options.boxWidth, 160, 24, width);
+    const logoHeight = (logo.height / logo.width) * logoWidth;
+    page.drawImage(logo, { x, y, width: logoWidth, height: logoHeight });
+  }
+
+  if (tool === "remove-metadata") {
+    pdf.setTitle("");
+    pdf.setAuthor("");
+    pdf.setSubject("");
+    pdf.setKeywords([]);
+    pdf.setProducer("AllTools");
+    pdf.setCreator("AllTools");
+  }
+
+  if (tool === "flatten-form") {
+    const form = pdf.getForm();
+    form.flatten();
+    page.drawText("Formulaire aplati", { x: 36, y: 24, size: 8, font: bold, color: rgb(0.4, 0.4, 0.4) });
+  }
+
+  return savePdf(pdf);
+}
+
 export async function processDirectPdfJob(data: { inputUrl?: string; options?: PdfOptions }) {
   const options = data.options || {};
   const inputUrls = options.inputs?.length ? options.inputs : data.inputUrl ? [data.inputUrl] : [];
@@ -335,6 +418,15 @@ export async function processDirectPdfJob(data: { inputUrl?: string; options?: P
       break;
     case "password":
       output = await protectedAction(inputUrls[0], options);
+      break;
+    case "add-text":
+    case "add-logo":
+    case "redact":
+    case "draw-signature":
+    case "checkbox":
+    case "remove-metadata":
+    case "flatten-form":
+      output = await advancedEdit(inputUrls, options);
       break;
     default:
       throw new Error("Outil PDF inconnu.");

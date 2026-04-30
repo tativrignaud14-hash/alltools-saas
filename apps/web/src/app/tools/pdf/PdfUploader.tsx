@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 
 type ToolKey =
   | "merge"
@@ -21,6 +21,13 @@ type ToolKey =
   | "password"
   | "sign"
   | "fill-form"
+  | "add-text"
+  | "add-logo"
+  | "redact"
+  | "draw-signature"
+  | "checkbox"
+  | "remove-metadata"
+  | "flatten-form"
   | "extract-text"
   | "extract-images"
   | "ocr"
@@ -62,6 +69,13 @@ const tools: ToolConfig[] = [
   { key: "crop", label: "Recadrer", group: "Edition" },
   { key: "n-up", label: "Pages par feuille", group: "Edition" },
   { key: "cover", label: "Page de garde", group: "Edition" },
+  { key: "add-text", label: "Texte libre", group: "Edition avancee" },
+  { key: "add-logo", label: "Image / logo", group: "Edition avancee", multi: true, accepts: "application/pdf,image/jpeg,image/png" },
+  { key: "redact", label: "Masquer zone", group: "Edition avancee" },
+  { key: "draw-signature", label: "Signature dessinee", group: "Edition avancee" },
+  { key: "checkbox", label: "Case a cocher", group: "Edition avancee" },
+  { key: "remove-metadata", label: "Nettoyer metadonnees", group: "Edition avancee" },
+  { key: "flatten-form", label: "Aplatir formulaire", group: "Edition avancee" },
   { key: "password", label: "Mot de passe", group: "Business" },
   { key: "sign", label: "Signer", group: "Business" },
   { key: "fill-form", label: "Remplir formulaire", group: "Business" },
@@ -124,6 +138,7 @@ function groupedTools() {
 export default function PdfUploader() {
   const [selectedTool, setSelectedTool] = useState<ToolKey>("merge");
   const [files, setFiles] = useState<File[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [status, setStatus] = useState<"idle" | "upload" | "processing" | "done" | "error">("idle");
   const [message, setMessage] = useState("");
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
@@ -137,12 +152,28 @@ export default function PdfUploader() {
   const [cropMargin, setCropMargin] = useState(24);
   const [perPage, setPerPage] = useState(2);
   const [password, setPassword] = useState("");
+  const [page, setPage] = useState(1);
+  const [x, setX] = useState(64);
+  const [y, setY] = useState(120);
+  const [boxWidth, setBoxWidth] = useState(220);
+  const [boxHeight, setBoxHeight] = useState(80);
+  const [checked, setChecked] = useState(true);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const signatureRef = useRef<HTMLCanvasElement | null>(null);
+  const drawingRef = useRef(false);
 
   const groups = useMemo(groupedTools, []);
   const config = tools.find((item) => item.key === selectedTool) || tools[0];
   const disabled = status === "upload" || status === "processing";
   const canRun = files.length > 0 || config.provider || ["invoice", "quote"].includes(selectedTool);
   const accept = config.accepts || "application/pdf";
+  const firstPdfPreview = previewUrls[files.findIndex((file) => file.type === "application/pdf")] || null;
+
+  useEffect(() => {
+    const urls = files.map((file) => URL.createObjectURL(file));
+    setPreviewUrls(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [files]);
 
   function buildOptions(inputUrls: string[]) {
     return {
@@ -158,16 +189,61 @@ export default function PdfUploader() {
       cropMargin,
       perPage,
       password,
+      page,
+      x,
+      y,
+      boxWidth,
+      boxHeight,
+      checked,
+      signatureData: signatureRef.current?.toDataURL("image/png"),
     };
   }
 
+  function addFiles(nextFiles: File[]) {
+    const accepted = nextFiles.filter((file) => accept.split(",").some((type) => file.type === type || (type.endsWith("/*") && file.type.startsWith(type.slice(0, -1)))));
+    setFiles((prev) => (config.multi ? [...prev, ...accepted] : accepted.slice(0, 1)));
+    setOutputUrl(null);
+    setMessage("");
+    setStatus("idle");
+  }
+
+  function moveFile(from: number, to: number) {
+    setFiles((prev) => {
+      const copy = [...prev];
+      const [item] = copy.splice(from, 1);
+      copy.splice(to, 0, item);
+      return copy;
+    });
+  }
+
+  function clearSignature() {
+    const canvas = signatureRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function drawSignature(event: PointerEvent<HTMLCanvasElement>) {
+    const canvas = signatureRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx || !drawingRef.current) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#111111";
+    ctx.lineTo(event.clientX - rect.left, event.clientY - rect.top);
+    ctx.stroke();
+  }
+
   async function run() {
-    if (!files.length) return;
     if (config.provider) {
       setStatus("error");
       setMessage("Cet outil est deja dans l'interface, mais il faut ajouter un provider IA/OCR/Office pour l'executer.");
       return;
     }
+    if (!files.length) return;
     if (selectedTool === "merge" && files.length < 2) {
       setStatus("error");
       setMessage("Ajoute au moins deux PDF.");
@@ -249,16 +325,49 @@ export default function PdfUploader() {
           multiple={config.multi}
           accept={accept}
           disabled={disabled}
-          onChange={(event) => setFiles(Array.from(event.target.files || []))}
-          className="mb-5 block w-full text-sm text-neutral-200"
+          onChange={(event) => addFiles(Array.from(event.target.files || []))}
+          className="sr-only"
+          id="pdf-file-input"
         />
 
+        <label
+          htmlFor="pdf-file-input"
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={(event) => {
+            event.preventDefault();
+            addFiles(Array.from(event.dataTransfer.files || []));
+          }}
+          className="mb-5 flex min-h-28 cursor-pointer items-center justify-center rounded-lg border border-dashed border-neutral-700 bg-neutral-950 px-4 text-center text-sm text-neutral-300 hover:border-blue-500"
+        >
+          Deposer les fichiers ici ou cliquer pour choisir
+        </label>
+
         {!!files.length && (
-          <ul className="mb-5 list-disc space-y-1 pl-5 text-sm text-neutral-400">
-            {files.map((file) => (
-              <li key={`${file.name}-${file.size}`}>{file.name}</li>
+          <ul className="mb-5 space-y-2 text-sm text-neutral-300">
+            {files.map((file, index) => (
+              <li
+                key={`${file.name}-${file.size}-${index}`}
+                draggable
+                onDragStart={() => setDraggedIndex(index)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => {
+                  if (draggedIndex !== null) moveFile(draggedIndex, index);
+                  setDraggedIndex(null);
+                }}
+                className="flex items-center justify-between gap-3 rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2"
+              >
+                <span className="truncate">{index + 1}. {file.name}</span>
+                <span className="text-xs text-neutral-500">glisser</span>
+              </li>
             ))}
           </ul>
+        )}
+
+        {firstPdfPreview && (
+          <div className="mb-5 overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950">
+            <div className="border-b border-neutral-800 px-3 py-2 text-xs uppercase text-neutral-500">Previsualisation</div>
+            <iframe src={firstPdfPreview} className="h-[420px] w-full bg-white" title="Previsualisation PDF" />
+          </div>
         )}
 
         <div className="mb-5 grid gap-4 md:grid-cols-2">
@@ -281,6 +390,78 @@ export default function PdfUploader() {
               Texte
               <input value={text} onChange={(event) => setText(event.target.value)} className="rounded-lg bg-neutral-950 p-2" />
             </label>
+          )}
+
+          {["add-text", "redact", "draw-signature", "checkbox", "add-logo"].includes(selectedTool) && (
+            <>
+              <label className="grid gap-1 text-sm">
+                Page
+                <input type="number" min={1} value={page} onChange={(event) => setPage(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+              </label>
+              <label className="grid gap-1 text-sm">
+                Position X
+                <input type="number" value={x} onChange={(event) => setX(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+              </label>
+              <label className="grid gap-1 text-sm">
+                Position Y
+                <input type="number" value={y} onChange={(event) => setY(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+              </label>
+              <label className="grid gap-1 text-sm">
+                Largeur
+                <input type="number" value={boxWidth} onChange={(event) => setBoxWidth(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+              </label>
+            </>
+          )}
+
+          {["redact"].includes(selectedTool) && (
+            <label className="grid gap-1 text-sm">
+              Hauteur
+              <input type="number" value={boxHeight} onChange={(event) => setBoxHeight(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+            </label>
+          )}
+
+          {["add-text", "checkbox", "fill-form", "sign"].includes(selectedTool) && (
+            <label className="grid gap-1 text-sm">
+              Texte
+              <input value={text} onChange={(event) => setText(event.target.value)} className="rounded-lg bg-neutral-950 p-2" />
+            </label>
+          )}
+
+          {selectedTool === "checkbox" && (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={checked} onChange={(event) => setChecked(event.target.checked)} />
+              Cochee
+            </label>
+          )}
+
+          {selectedTool === "draw-signature" && (
+            <div className="md:col-span-2">
+              <canvas
+                ref={signatureRef}
+                width={520}
+                height={160}
+                onPointerDown={(event) => {
+                  drawingRef.current = true;
+                  const ctx = signatureRef.current?.getContext("2d");
+                  const rect = signatureRef.current?.getBoundingClientRect();
+                  if (ctx && rect) {
+                    ctx.beginPath();
+                    ctx.moveTo(event.clientX - rect.left, event.clientY - rect.top);
+                  }
+                }}
+                onPointerMove={drawSignature}
+                onPointerUp={() => {
+                  drawingRef.current = false;
+                }}
+                onPointerLeave={() => {
+                  drawingRef.current = false;
+                }}
+                className="h-40 w-full touch-none rounded-lg bg-white"
+              />
+              <button type="button" onClick={clearSignature} className="mt-2 rounded-lg border border-neutral-700 px-3 py-1 text-sm hover:bg-neutral-800">
+                Effacer signature
+              </button>
+            </div>
           )}
 
           {selectedTool === "cover" && (
