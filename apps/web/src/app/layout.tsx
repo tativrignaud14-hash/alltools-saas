@@ -32,6 +32,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <Link href="/dashboard" className="rounded-md px-3 py-2 transition hover:bg-white/10 hover:text-white">
                 Dashboard
               </Link>
+              <Link href="/#a-propos" className="rounded-md px-3 py-2 transition hover:bg-white/10 hover:text-white">
+                A propos
+              </Link>
               <Link href="/tools/image" className="rounded-md px-3 py-2 transition hover:bg-white/10 hover:text-white">
                 Image
               </Link>

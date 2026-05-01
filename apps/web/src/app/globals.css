@@ -371,27 +371,6 @@ body::after {
   width: 100% !important;
 }
 
-.brand-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 24px;
-}
-
-.brand-strip span {
-  --swatch: var(--cyan);
-  display: inline-flex;
-  align-items: center;
-  min-height: 31px;
-  border: 1px solid color-mix(in srgb, var(--swatch) 46%, transparent);
-  border-radius: 999px;
-  padding: 0 11px;
-  background: color-mix(in srgb, var(--swatch) 12%, transparent);
-  color: var(--paper);
-  font-size: 12px;
-  animation: chip-breathe 3.2s ease-in-out infinite;
-}
-
 .brand-benefits {
   display: grid;
   max-width: 690px;
@@ -590,6 +569,145 @@ body::after {
 .dock-item:hover::before {
   opacity: 1;
   animation: holo-sweep 1.1s ease;
+}
+
+.about-story {
+  position: relative;
+  display: grid;
+  gap: 34px;
+  padding: 86px 1.25rem 104px;
+  background:
+    radial-gradient(circle at 8% 28%, rgba(37, 99, 235, 0.14), transparent 32%),
+    radial-gradient(circle at 90% 38%, rgba(255, 77, 90, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(11, 18, 32, 0.94), rgba(7, 10, 18, 0.98));
+}
+
+.about-story::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(246, 247, 249, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(246, 247, 249, 0.035) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(180deg, transparent, black 12%, black 78%, transparent);
+}
+
+.about-story__intro,
+.story-steps {
+  position: relative;
+  z-index: 1;
+  width: min(1180px, 100%);
+  margin-inline: auto;
+}
+
+.about-story__intro {
+  display: grid;
+  gap: 18px;
+}
+
+.story-kicker {
+  margin: 0;
+  color: var(--amber);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.about-story h2 {
+  max-width: 840px;
+  margin: 0;
+  color: var(--paper);
+  font-size: clamp(36px, 5vw, 76px);
+  font-weight: 900;
+  line-height: 0.94;
+  text-wrap: balance;
+}
+
+.about-story__intro > p:last-child {
+  max-width: 780px;
+  margin: 0;
+  color: rgba(246, 247, 249, 0.72);
+  font-size: 18px;
+  line-height: 1.75;
+}
+
+.story-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.story-steps article {
+  position: relative;
+  min-height: 250px;
+  overflow: hidden;
+  border: 1px solid rgba(246, 247, 249, 0.12);
+  border-radius: 28px;
+  padding: 22px;
+  background:
+    linear-gradient(145deg, rgba(246, 247, 249, 0.1), transparent 42%),
+    rgba(11, 18, 32, 0.66);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.story-steps article::after {
+  position: absolute;
+  right: -58px;
+  bottom: -58px;
+  width: 160px;
+  height: 160px;
+  border-radius: 42px;
+  background: linear-gradient(135deg, var(--blue), var(--violet), var(--coral));
+  content: "";
+  opacity: 0.2;
+  transform: rotate(18deg);
+}
+
+.story-steps article:nth-child(2)::after {
+  background: linear-gradient(135deg, var(--violet), var(--coral), var(--amber));
+}
+
+.story-steps article:nth-child(3)::after {
+  background: linear-gradient(135deg, var(--coral), var(--amber), var(--mint));
+}
+
+.story-steps span {
+  display: inline-grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 15px;
+  background: linear-gradient(135deg, var(--blue), var(--violet));
+  color: white;
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 16px 38px rgba(37, 99, 235, 0.24);
+}
+
+.story-steps article:nth-child(2) span {
+  background: linear-gradient(135deg, var(--violet), var(--coral));
+}
+
+.story-steps article:nth-child(3) span {
+  background: linear-gradient(135deg, var(--coral), var(--amber));
+}
+
+.story-steps h3 {
+  margin: 42px 0 10px;
+  color: var(--paper);
+  font-size: 24px;
+  font-weight: 850;
+  line-height: 1.08;
+}
+
+.story-steps p {
+  margin: 0;
+  color: rgba(246, 247, 249, 0.66);
+  line-height: 1.65;
 }
 
 .tool-card {
@@ -953,6 +1071,10 @@ body::after {
     scroll-snap-align: start;
   }
 
+  .story-steps {
+    grid-template-columns: 1fr;
+  }
+
   .tool-sidebar {
     position: relative;
     top: auto;
@@ -1037,6 +1159,19 @@ body::after {
 
   .dock-item {
     min-height: 86px;
+  }
+
+  .about-story {
+    padding: 64px 1rem 78px;
+  }
+
+  .about-story__intro > p:last-child {
+    font-size: 16px;
+  }
+
+  .story-steps article {
+    min-height: 220px;
+    border-radius: 22px;
   }
 
   .tool-workspace {

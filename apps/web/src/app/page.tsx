@@ -2,14 +2,6 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import Hero3DScene from "./Hero3DScene";
 
-const palette = [
-  ["Bleu", "#2563EB"],
-  ["Violet", "#7C3AED"],
-  ["Corail", "#FF4D5A"],
-  ["Ambre", "#FFB84D"],
-  ["Teal", "#14B8A6"],
-];
-
 const tools = [
   { href: "/tools/image", title: "Photo", desc: "Retouche, IA, formats", accent: "#2563EB", icon: "image" },
   { href: "/tools/pdf", title: "PDF", desc: "Fusion, edition, signature", accent: "#FF4D5A", icon: "pdf" },
@@ -35,18 +27,10 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="brand-strip">
-            {palette.map(([name, color]) => (
-              <span key={name} style={{ "--swatch": color } as CSSProperties}>
-                {name}
-              </span>
-            ))}
-          </div>
-
-          <p className="stage-kicker">AllTools OS</p>
+          <p className="stage-kicker">L'atelier qui remplace dix onglets</p>
           <h1>Edite tout, dans un espace visuel ultra rapide.</h1>
           <p className="stage-subtitle">
-            Image, PDF, audio et video dans une interface plein ecran, avec drag and drop, previews, traitement local quand c'est possible et resultat automatique.
+            AllTools regroupe les outils du quotidien pour transformer une image, corriger un PDF, preparer un audio ou exporter une video sans installer de logiciel.
           </p>
 
           <div className="brand-benefits" aria-label="Avantages AllTools">
@@ -89,6 +73,35 @@ export default function HomePage() {
             </Link>
           ))}
         </nav>
+      </section>
+
+      <section id="a-propos" className="about-story">
+        <div className="about-story__intro">
+          <p className="story-kicker">A propos</p>
+          <h2>Un atelier de fichiers pense pour aller droit au resultat.</h2>
+          <p>
+            L'idee est simple : quand tu dois convertir, compresser, recadrer, fusionner ou nettoyer un fichier, tu ne devrais pas chercher le bon site,
+            subir des pubs ou installer une application. Tu glisses ton fichier, tu vois ce qui va changer, puis AllTools te rend le resultat.
+          </p>
+        </div>
+
+        <div className="story-steps" aria-label="Comment fonctionne AllTools">
+          <article>
+            <span>01</span>
+            <h3>Tout commence par ton fichier</h3>
+            <p>Image, PDF, audio ou video : l'interface s'adapte a ce que tu veux faire et garde la preview au centre.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Tu controles avant de lancer</h3>
+            <p>Drag and drop, apercu, options lisibles et editions avancees evitent les essais au hasard.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Le resultat arrive sans friction</h3>
+            <p>Quand le traitement est pret, le fichier est telecharge automatiquement et reste disponible seulement temporairement.</p>
+          </article>
+        </div>
       </section>
     </div>
   );
