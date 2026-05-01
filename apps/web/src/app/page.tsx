@@ -17,12 +17,6 @@ const tools = [
   { href: "/dashboard", title: "SaaS", desc: "Quotas, fichiers, plans", accent: "#7c5cff" },
 ];
 
-const metrics = [
-  ["Preview", "drag & drop"],
-  ["Free", "sans compte"],
-  ["Storage", "2 h"],
-];
-
 export default function HomePage() {
   return (
     <div className="full-bleed-home">
@@ -57,34 +51,6 @@ export default function HomePage() {
         <div className="stage-orbit-wrap animate-rise-delay" aria-hidden="true">
           <div className="stage-orbit-mask">
             <Hero3DScene />
-          </div>
-        </div>
-
-        <div className="stage-panel animate-rise-delay">
-          <div className="panel-top">
-            <div>
-              <span>Pipeline</span>
-              <strong>Live workspace</strong>
-            </div>
-            <b>Ready</b>
-          </div>
-
-          <div className="pipeline-steps">
-            {["Upload", "Preview", "Process", "Export"].map((step, index) => (
-              <div key={step} className="pipeline-step" style={{ "--step-color": tools[index]?.accent || "#00e5ff" } as CSSProperties}>
-                <span>{step}</span>
-                <i />
-              </div>
-            ))}
-          </div>
-
-          <div className="metric-row">
-            {metrics.map(([label, value]) => (
-              <div key={label}>
-                <span>{label}</span>
-                <strong>{value}</strong>
-              </div>
-            ))}
           </div>
         </div>
 

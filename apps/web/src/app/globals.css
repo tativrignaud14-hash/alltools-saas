@@ -208,7 +208,7 @@ body::before {
   position: absolute;
   top: 7vh;
   right: -4vw;
-  bottom: 138px;
+  bottom: 130px;
   z-index: 2;
   width: min(64vw, 960px);
   min-width: 660px;
@@ -300,84 +300,6 @@ body::before {
   transform: translateY(-3px);
 }
 
-.stage-panel {
-  position: absolute;
-  right: 2rem;
-  bottom: 170px;
-  z-index: 5;
-  width: min(380px, calc(100vw - 2rem));
-  border: 1px solid rgba(246, 242, 232, 0.14);
-  border-radius: 24px;
-  padding: 18px;
-  background: rgba(7, 10, 18, 0.58);
-  box-shadow: 0 28px 88px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(18px);
-}
-
-.panel-top,
-.metric-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.panel-top span,
-.metric-row span {
-  display: block;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.panel-top strong,
-.metric-row strong {
-  display: block;
-  margin-top: 4px;
-  font-size: 14px;
-}
-
-.panel-top b {
-  border: 1px solid rgba(216, 255, 79, 0.34);
-  border-radius: 999px;
-  padding: 7px 10px;
-  background: rgba(216, 255, 79, 0.1);
-  color: var(--lime);
-  font-size: 12px;
-}
-
-.pipeline-steps {
-  display: grid;
-  gap: 12px;
-  margin: 20px 0;
-}
-
-.pipeline-step {
-  --step-color: var(--cyan);
-  border: 1px solid rgba(246, 242, 232, 0.1);
-  border-radius: 16px;
-  padding: 13px;
-  background: rgba(246, 242, 232, 0.05);
-}
-
-.pipeline-step span {
-  color: rgba(246, 242, 232, 0.84);
-  font-size: 13px;
-}
-
-.pipeline-step i {
-  display: block;
-  height: 6px;
-  margin-top: 10px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, transparent, var(--step-color), transparent);
-  animation: line-load 2.8s ease-in-out infinite;
-}
-
-.metric-row {
-  border-top: 1px solid rgba(246, 242, 232, 0.12);
-  padding-top: 16px;
-}
-
 .tool-dock {
   position: absolute;
   right: 1.25rem;
@@ -456,18 +378,9 @@ body::before {
   .stage-orbit-wrap {
     top: 10vh;
     right: -34vw;
-    bottom: 260px;
+    bottom: 220px;
     min-width: 700px;
     opacity: 0.52;
-  }
-
-  .stage-panel {
-    position: relative;
-    right: auto;
-    top: auto;
-    bottom: auto;
-    width: auto;
-    margin: -170px 1.25rem 160px;
   }
 
   .tool-dock {
