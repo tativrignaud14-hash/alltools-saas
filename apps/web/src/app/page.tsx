@@ -28,9 +28,6 @@ export default function HomePage() {
     <div className="full-bleed-home">
       <section className="home-stage">
         <div className="stage-grid" aria-hidden="true" />
-        <div className="stage-3d" aria-hidden="true">
-          <Hero3DScene />
-        </div>
 
         <div className="stage-copy animate-rise">
           <div className="brand-strip">
@@ -54,6 +51,12 @@ export default function HomePage() {
             <Link href="/dashboard" className="secondary-action">
               Dashboard
             </Link>
+          </div>
+        </div>
+
+        <div className="stage-orbit-wrap animate-rise-delay" aria-hidden="true">
+          <div className="stage-orbit-mask">
+            <Hero3DScene />
           </div>
         </div>
 
