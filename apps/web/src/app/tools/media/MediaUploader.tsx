@@ -83,11 +83,11 @@ export default function MediaUploader({ kind }: { kind: "audio" | "video" }) {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-      <aside className="space-y-5">
+    <div className="tool-workspace">
+      <aside className="tool-sidebar space-y-5">
         {Object.entries(groups).map(([group, items]) => (
           <div key={group}>
-            <div className="mb-2 text-xs uppercase text-neutral-500">{group}</div>
+            <div className="tool-group-title">{group}</div>
             <div className="grid gap-2">
               {items.map((item) => (
                 <button
@@ -98,9 +98,7 @@ export default function MediaUploader({ kind }: { kind: "audio" | "video" }) {
                     setFiles([]);
                     setMessage("");
                   }}
-                  className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
-                    selected === item.key ? "border-blue-500 bg-blue-600 text-white" : "border-neutral-700 bg-neutral-900 text-neutral-200 hover:bg-neutral-800"
-                  }`}
+                  className={`tool-tab ${selected === item.key ? "tool-tab-active" : ""}`}
                 >
                   {item.label}
                 </button>
@@ -110,13 +108,13 @@ export default function MediaUploader({ kind }: { kind: "audio" | "video" }) {
         ))}
       </aside>
 
-      <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <section className="tool-surface">
+        <div className="tool-heading">
           <div>
             <h2 className="text-xl font-semibold">{config.label}</h2>
             <p className="text-sm text-neutral-400">{config.multi ? "Selection multiple acceptee" : "Un fichier a la fois"}</p>
           </div>
-          <span className="rounded-full border border-amber-500 px-3 py-1 text-xs text-amber-300">Worker FFmpeg requis</span>
+          <span className="status-pill">Worker FFmpeg requis</span>
         </div>
 
         <input
@@ -134,7 +132,7 @@ export default function MediaUploader({ kind }: { kind: "audio" | "video" }) {
             event.preventDefault();
             addFiles(Array.from(event.dataTransfer.files || []));
           }}
-          className="mb-5 flex min-h-28 cursor-pointer items-center justify-center rounded-lg border border-dashed border-neutral-700 bg-neutral-950 px-4 text-center text-sm text-neutral-300 hover:border-blue-500"
+          className="drop-zone"
         >
           Deposer les fichiers ici ou cliquer pour choisir
         </label>
@@ -151,7 +149,7 @@ export default function MediaUploader({ kind }: { kind: "audio" | "video" }) {
                   if (draggedIndex !== null) moveFile(draggedIndex, index);
                   setDraggedIndex(null);
                 }}
-                className="rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2"
+                className="file-card px-3 py-2"
               >
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <span className="truncate">{index + 1}. {file.name}</span>
@@ -164,7 +162,7 @@ export default function MediaUploader({ kind }: { kind: "audio" | "video" }) {
           </ul>
         )}
 
-        <button type="button" onClick={run} disabled={!files.length} className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700 disabled:bg-neutral-700">
+        <button type="button" onClick={run} disabled={!files.length} className="run-button">
           Lancer
         </button>
         {message && <p className="mt-4 text-sm text-amber-300">{message}</p>}

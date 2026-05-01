@@ -256,20 +256,18 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-      <aside className="space-y-5">
+    <div className="tool-workspace">
+      <aside className="tool-sidebar space-y-5">
         {Object.entries(groups).map(([group, items]) => (
           <div key={group}>
-            <div className="mb-2 text-xs uppercase text-neutral-500">{group}</div>
+            <div className="tool-group-title">{group}</div>
             <div className="grid gap-2">
               {items.map((item) => (
                 <button
                   key={item.key}
                   type="button"
                   onClick={() => setSelectedTool(item.key)}
-                  className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
-                    selectedTool === item.key ? "border-blue-500 bg-blue-600 text-white" : "border-neutral-700 bg-neutral-900 text-neutral-200 hover:bg-neutral-800"
-                  }`}
+                  className={`tool-tab ${selectedTool === item.key ? "tool-tab-active" : ""}`}
                 >
                   {item.label}
                 </button>
@@ -279,13 +277,13 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
         ))}
       </aside>
 
-      <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <section className="tool-surface">
+        <div className="tool-heading">
           <div>
             <h2 className="text-xl font-semibold">{config.label}</h2>
             <p className="text-sm text-neutral-400">{config.multi ? "Selection multiple acceptee" : "Une image a la fois"}</p>
           </div>
-          {config.aiExternal && <span className="rounded-full border border-amber-500 px-3 py-1 text-xs text-amber-300">Provider IA requis</span>}
+          {config.aiExternal && <span className="status-pill">Provider IA requis</span>}
         </div>
 
         <input
@@ -305,7 +303,7 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
             event.preventDefault();
             addFiles(Array.from(event.dataTransfer.files || []));
           }}
-          className="mb-5 flex min-h-28 cursor-pointer items-center justify-center rounded-lg border border-dashed border-neutral-700 bg-neutral-950 px-4 text-center text-sm text-neutral-300 hover:border-blue-500"
+          className="drop-zone"
         >
           Deposer les images ici ou cliquer pour choisir
         </label>
@@ -322,7 +320,7 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
                   if (draggedIndex !== null) moveFile(draggedIndex, index);
                   setDraggedIndex(null);
                 }}
-                className="rounded-lg border border-neutral-800 bg-neutral-950 p-3"
+                className="file-card p-3"
               >
                 {previewUrls[index] && <img src={previewUrls[index]} alt="" className="mb-3 aspect-video w-full rounded bg-black object-contain" />}
                 <div className="truncate text-sm text-neutral-300">{index + 1}. {file.name}</div>
@@ -334,22 +332,22 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
 
         {previewUrls[0] && outputUrl && (
           <div className="mb-5 grid gap-4 md:grid-cols-2">
-            <div className="rounded-lg border border-neutral-800 bg-neutral-950 p-3">
+            <div className="preview-card p-3">
               <div className="mb-2 text-xs uppercase text-neutral-500">Avant</div>
               <img src={previewUrls[0]} alt="" className="aspect-video w-full object-contain" />
             </div>
-            <div className="rounded-lg border border-neutral-800 bg-neutral-950 p-3">
+            <div className="preview-card p-3">
               <div className="mb-2 text-xs uppercase text-neutral-500">Apres</div>
               <img src={outputUrl} alt="" className="aspect-video w-full object-contain" />
             </div>
           </div>
         )}
 
-        <div className="mb-5 grid gap-4 md:grid-cols-2">
+        <div className="control-grid md:grid-cols-2">
           {["convert", "batch-convert", "compress", "batch-compress", "resize", "crop", "social", "watermark", "weight-target", "auto-enhance", "denoise", "restore"].includes(selectedTool) && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Format
-              <select value={format} onChange={(event) => setFormat(event.target.value)} className="rounded-lg bg-neutral-950 p-2">
+              <select value={format} onChange={(event) => setFormat(event.target.value)} className="control-input">
                 {formatOptions.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
@@ -358,29 +356,29 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
           )}
 
           {["convert", "compress", "batch-convert", "batch-compress", "watermark", "weight-target"].includes(selectedTool) && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Qualite
-              <input type="number" min={1} max={100} value={quality} onChange={(event) => setQuality(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+              <input type="number" min={1} max={100} value={quality} onChange={(event) => setQuality(Number(event.target.value))} className="control-input" />
             </label>
           )}
 
           {selectedTool === "resize" && (
             <>
-              <label className="grid gap-1 text-sm">
+              <label className="control-label">
                 Largeur
-                <input type="number" value={width} onChange={(event) => setWidth(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+                <input type="number" value={width} onChange={(event) => setWidth(Number(event.target.value))} className="control-input" />
               </label>
-              <label className="grid gap-1 text-sm">
+              <label className="control-label">
                 Hauteur
-                <input type="number" value={height} onChange={(event) => setHeight(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+                <input type="number" value={height} onChange={(event) => setHeight(Number(event.target.value))} className="control-input" />
               </label>
             </>
           )}
 
           {["crop", "social"].includes(selectedTool) && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Preset
-              <select value={preset} onChange={(event) => setPreset(event.target.value)} className="rounded-lg bg-neutral-950 p-2">
+              <select value={preset} onChange={(event) => setPreset(event.target.value)} className="control-input">
                 {socialOptions.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
@@ -389,9 +387,9 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
           )}
 
           {selectedTool === "marketplace" && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Marketplace
-              <select value={marketplacePreset} onChange={(event) => setMarketplacePreset(event.target.value)} className="rounded-lg bg-neutral-950 p-2">
+              <select value={marketplacePreset} onChange={(event) => setMarketplacePreset(event.target.value)} className="control-input">
                 {marketplaceOptions.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
@@ -400,39 +398,39 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
           )}
 
           {["background", "marketplace"].includes(selectedTool) && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Couleur de fond
-              <input type="color" value={background} onChange={(event) => setBackground(event.target.value)} className="h-10 rounded-lg bg-neutral-950 p-1" />
+              <input type="color" value={background} onChange={(event) => setBackground(event.target.value)} className="control-input h-11 p-1" />
             </label>
           )}
 
           {selectedTool === "watermark" && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Texte watermark
-              <input value={watermarkText} onChange={(event) => setWatermarkText(event.target.value)} className="rounded-lg bg-neutral-950 p-2" />
+              <input value={watermarkText} onChange={(event) => setWatermarkText(event.target.value)} className="control-input" />
             </label>
           )}
 
           {selectedTool === "weight-target" && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Poids cible KB
-              <input type="number" min={10} value={targetKb} onChange={(event) => setTargetKb(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+              <input type="number" min={10} value={targetKb} onChange={(event) => setTargetKb(Number(event.target.value))} className="control-input" />
             </label>
           )}
 
           {selectedTool === "rename" && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Nom de sortie
-              <input value={outputName} onChange={(event) => setOutputName(event.target.value)} className="rounded-lg bg-neutral-950 p-2" />
+              <input value={outputName} onChange={(event) => setOutputName(event.target.value)} className="control-input" />
             </label>
           )}
 
           {["blur", "pixelate"].includes(selectedTool) && (
             <>
               {(["x", "y", "w", "h"] as const).map((key) => (
-                <label key={key} className="grid gap-1 text-sm">
+                <label key={key} className="control-label">
                   Zone {key}
-                  <input type="number" value={zone[key]} onChange={(event) => setZone((prev) => ({ ...prev, [key]: Number(event.target.value) }))} className="rounded-lg bg-neutral-950 p-2" />
+                  <input type="number" value={zone[key]} onChange={(event) => setZone((prev) => ({ ...prev, [key]: Number(event.target.value) }))} className="control-input" />
                 </label>
               ))}
             </>
@@ -443,14 +441,14 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
           type="button"
           onClick={run}
           disabled={!files.length || disabled}
-          className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-neutral-700"
+          className="run-button"
         >
           {status === "upload" ? "Upload..." : status === "processing" ? "Traitement..." : "Lancer"}
         </button>
 
         {message && <p className={`mt-4 text-sm ${status === "error" ? "text-red-400" : status === "done" ? "text-green-400" : "text-neutral-400"}`}>{message}</p>}
         {outputUrl && (
-          <a href={outputUrl} className="mt-4 inline-flex rounded-lg border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800">
+          <a href={outputUrl} className="result-link">
             Telecharger le resultat
           </a>
         )}

@@ -282,11 +282,11 @@ export default function PdfUploader() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-      <aside className="space-y-5">
+    <div className="tool-workspace">
+      <aside className="tool-sidebar space-y-5">
         {Object.entries(groups).map(([group, items]) => (
           <div key={group}>
-            <div className="mb-2 text-xs uppercase text-neutral-500">{group}</div>
+            <div className="tool-group-title">{group}</div>
             <div className="grid gap-2">
               {items.map((item) => (
                 <button
@@ -299,9 +299,7 @@ export default function PdfUploader() {
                     setOutputUrl(null);
                     setStatus("idle");
                   }}
-                  className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
-                    selectedTool === item.key ? "border-blue-500 bg-blue-600 text-white" : "border-neutral-700 bg-neutral-900 text-neutral-200 hover:bg-neutral-800"
-                  }`}
+                  className={`tool-tab ${selectedTool === item.key ? "tool-tab-active" : ""}`}
                 >
                   {item.label}
                 </button>
@@ -311,13 +309,13 @@ export default function PdfUploader() {
         ))}
       </aside>
 
-      <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <section className="tool-surface">
+        <div className="tool-heading">
           <div>
             <h2 className="text-xl font-semibold">{config.label}</h2>
             <p className="text-sm text-neutral-400">{config.multi ? "Selection multiple acceptee" : "Un fichier a la fois"}</p>
           </div>
-          {config.provider && <span className="rounded-full border border-amber-500 px-3 py-1 text-xs text-amber-300">Provider requis</span>}
+          {config.provider && <span className="status-pill">Provider requis</span>}
         </div>
 
         <input
@@ -337,7 +335,7 @@ export default function PdfUploader() {
             event.preventDefault();
             addFiles(Array.from(event.dataTransfer.files || []));
           }}
-          className="mb-5 flex min-h-28 cursor-pointer items-center justify-center rounded-lg border border-dashed border-neutral-700 bg-neutral-950 px-4 text-center text-sm text-neutral-300 hover:border-blue-500"
+          className="drop-zone"
         >
           Deposer les fichiers ici ou cliquer pour choisir
         </label>
@@ -354,7 +352,7 @@ export default function PdfUploader() {
                   if (draggedIndex !== null) moveFile(draggedIndex, index);
                   setDraggedIndex(null);
                 }}
-                className="flex items-center justify-between gap-3 rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2"
+                className="file-card flex items-center justify-between gap-3 px-3 py-2"
               >
                 <span className="truncate">{index + 1}. {file.name}</span>
                 <span className="text-xs text-neutral-500">glisser</span>
@@ -364,66 +362,66 @@ export default function PdfUploader() {
         )}
 
         {firstPdfPreview && (
-          <div className="mb-5 overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950">
+          <div className="preview-card mb-5 overflow-hidden">
             <div className="border-b border-neutral-800 px-3 py-2 text-xs uppercase text-neutral-500">Previsualisation</div>
             <iframe src={firstPdfPreview} className="h-[420px] w-full bg-white" title="Previsualisation PDF" />
           </div>
         )}
 
-        <div className="mb-5 grid gap-4 md:grid-cols-2">
+        <div className="control-grid md:grid-cols-2">
           {["extract-pages", "delete-pages"].includes(selectedTool) && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Pages
-              <input value={pages} onChange={(event) => setPages(event.target.value)} placeholder="1,3,5-8" className="rounded-lg bg-neutral-950 p-2" />
+              <input value={pages} onChange={(event) => setPages(event.target.value)} placeholder="1,3,5-8" className="control-input" />
             </label>
           )}
 
           {selectedTool === "reorder" && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Ordre des pages
-              <input value={order} onChange={(event) => setOrder(event.target.value)} placeholder="3,1,2" className="rounded-lg bg-neutral-950 p-2" />
+              <input value={order} onChange={(event) => setOrder(event.target.value)} placeholder="3,1,2" className="control-input" />
             </label>
           )}
 
           {["watermark", "stamp", "qr-code"].includes(selectedTool) && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Texte
-              <input value={text} onChange={(event) => setText(event.target.value)} className="rounded-lg bg-neutral-950 p-2" />
+              <input value={text} onChange={(event) => setText(event.target.value)} className="control-input" />
             </label>
           )}
 
           {["add-text", "redact", "draw-signature", "checkbox", "add-logo"].includes(selectedTool) && (
             <>
-              <label className="grid gap-1 text-sm">
+              <label className="control-label">
                 Page
-                <input type="number" min={1} value={page} onChange={(event) => setPage(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+                <input type="number" min={1} value={page} onChange={(event) => setPage(Number(event.target.value))} className="control-input" />
               </label>
-              <label className="grid gap-1 text-sm">
+              <label className="control-label">
                 Position X
-                <input type="number" value={x} onChange={(event) => setX(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+                <input type="number" value={x} onChange={(event) => setX(Number(event.target.value))} className="control-input" />
               </label>
-              <label className="grid gap-1 text-sm">
+              <label className="control-label">
                 Position Y
-                <input type="number" value={y} onChange={(event) => setY(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+                <input type="number" value={y} onChange={(event) => setY(Number(event.target.value))} className="control-input" />
               </label>
-              <label className="grid gap-1 text-sm">
+              <label className="control-label">
                 Largeur
-                <input type="number" value={boxWidth} onChange={(event) => setBoxWidth(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+                <input type="number" value={boxWidth} onChange={(event) => setBoxWidth(Number(event.target.value))} className="control-input" />
               </label>
             </>
           )}
 
           {["redact"].includes(selectedTool) && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Hauteur
-              <input type="number" value={boxHeight} onChange={(event) => setBoxHeight(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+              <input type="number" value={boxHeight} onChange={(event) => setBoxHeight(Number(event.target.value))} className="control-input" />
             </label>
           )}
 
           {["add-text", "checkbox", "fill-form", "sign"].includes(selectedTool) && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Texte
-              <input value={text} onChange={(event) => setText(event.target.value)} className="rounded-lg bg-neutral-950 p-2" />
+              <input value={text} onChange={(event) => setText(event.target.value)} className="control-input" />
             </label>
           )}
 
@@ -466,21 +464,21 @@ export default function PdfUploader() {
 
           {selectedTool === "cover" && (
             <>
-              <label className="grid gap-1 text-sm">
+              <label className="control-label">
                 Titre
-                <input value={title} onChange={(event) => setTitle(event.target.value)} className="rounded-lg bg-neutral-950 p-2" />
+                <input value={title} onChange={(event) => setTitle(event.target.value)} className="control-input" />
               </label>
-              <label className="grid gap-1 text-sm">
+              <label className="control-label">
                 Sous-titre
-                <input value={subtitle} onChange={(event) => setSubtitle(event.target.value)} className="rounded-lg bg-neutral-950 p-2" />
+                <input value={subtitle} onChange={(event) => setSubtitle(event.target.value)} className="control-input" />
               </label>
             </>
           )}
 
           {selectedTool === "rotate" && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Rotation
-              <select value={rotation} onChange={(event) => setRotation(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2">
+              <select value={rotation} onChange={(event) => setRotation(Number(event.target.value))} className="control-input">
                 <option value={90}>90 degres</option>
                 <option value={180}>180 degres</option>
                 <option value={270}>270 degres</option>
@@ -489,23 +487,23 @@ export default function PdfUploader() {
           )}
 
           {selectedTool === "margins" && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Marge
-              <input type="number" value={margin} onChange={(event) => setMargin(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+              <input type="number" value={margin} onChange={(event) => setMargin(Number(event.target.value))} className="control-input" />
             </label>
           )}
 
           {selectedTool === "crop" && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Recadrage
-              <input type="number" value={cropMargin} onChange={(event) => setCropMargin(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2" />
+              <input type="number" value={cropMargin} onChange={(event) => setCropMargin(Number(event.target.value))} className="control-input" />
             </label>
           )}
 
           {selectedTool === "n-up" && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Pages par feuille
-              <select value={perPage} onChange={(event) => setPerPage(Number(event.target.value))} className="rounded-lg bg-neutral-950 p-2">
+              <select value={perPage} onChange={(event) => setPerPage(Number(event.target.value))} className="control-input">
                 <option value={2}>2</option>
                 <option value={4}>4</option>
               </select>
@@ -513,9 +511,9 @@ export default function PdfUploader() {
           )}
 
           {selectedTool === "password" && (
-            <label className="grid gap-1 text-sm">
+            <label className="control-label">
               Mot de passe
-              <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="rounded-lg bg-neutral-950 p-2" />
+              <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="control-input" />
             </label>
           )}
         </div>
@@ -524,14 +522,14 @@ export default function PdfUploader() {
           type="button"
           onClick={run}
           disabled={!canRun || disabled}
-          className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-neutral-700"
+          className="run-button"
         >
           {status === "upload" ? "Upload..." : status === "processing" ? "Traitement..." : "Lancer"}
         </button>
 
         {message && <p className={`mt-4 text-sm ${status === "error" ? "text-red-400" : status === "done" ? "text-green-400" : "text-neutral-400"}`}>{message}</p>}
         {outputUrl && (
-          <a href={outputUrl} className="mt-4 inline-flex rounded-lg border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800">
+          <a href={outputUrl} className="result-link">
             Telecharger le resultat
           </a>
         )}
