@@ -37,6 +37,7 @@ interface ToolConfig {
   group: string;
   multi?: boolean;
   aiExternal?: boolean;
+  localAi?: boolean;
 }
 
 const tools: ToolConfig[] = [
@@ -60,11 +61,11 @@ const tools: ToolConfig[] = [
   { key: "rename", label: "Renommage auto", group: "Workflow" },
   { key: "social-pack", label: "Pack social ZIP", group: "Workflow", multi: true },
   { key: "mockup", label: "Mockup produit", group: "Workflow", aiExternal: true },
-  { key: "remove-bg", label: "Supprimer fond IA", group: "IA" },
-  { key: "upscale", label: "Upscale", group: "IA" },
-  { key: "auto-enhance", label: "Amelioration auto", group: "IA" },
-  { key: "denoise", label: "Debruitage", group: "IA" },
-  { key: "restore", label: "Restauration photo", group: "IA" },
+  { key: "remove-bg", label: "Supprimer fond IA", group: "IA locale", localAi: true },
+  { key: "upscale", label: "Upscale local", group: "IA locale", localAi: true },
+  { key: "auto-enhance", label: "Amelioration auto", group: "IA locale", localAi: true },
+  { key: "denoise", label: "Debruitage", group: "IA locale", localAi: true },
+  { key: "restore", label: "Restauration photo", group: "IA locale", localAi: true },
   { key: "colorize", label: "Colorisation", group: "IA", aiExternal: true },
   { key: "product-background-ai", label: "Fond produit IA", group: "IA", aiExternal: true },
 ];
@@ -134,6 +135,95 @@ function downloadResult(url: string) {
   link.remove();
 }
 
+async function canvasFromFile(file: File, scale = 1) {
+  const bitmap = await createImageBitmap(file);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) throw new Error("Canvas indisponible sur ce navigateur.");
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  return { canvas, context };
+}
+
+function clampChannel(value: number) {
+  return Math.max(0, Math.min(255, value));
+}
+
+function enhanceImageData(imageData: ImageData, mode: "enhance" | "denoise" | "restore") {
+  const data = imageData.data;
+  const contrast = mode === "restore" ? 1.22 : 1.12;
+  const saturation = mode === "denoise" ? 0.96 : 1.1;
+  const brightness = mode === "restore" ? 9 : 3;
+
+  for (let index = 0; index < data.length; index += 4) {
+    let red = data[index];
+    let green = data[index + 1];
+    let blue = data[index + 2];
+
+    if (mode === "restore") {
+      const gray = red * 0.299 + green * 0.587 + blue * 0.114;
+      red = gray + (red - gray) * 1.08;
+      green = gray + (green - gray) * 1.04;
+      blue = gray + (blue - gray) * 0.98;
+    }
+
+    const luminance = red * 0.299 + green * 0.587 + blue * 0.114;
+    red = luminance + (red - luminance) * saturation;
+    green = luminance + (green - luminance) * saturation;
+    blue = luminance + (blue - luminance) * saturation;
+
+    data[index] = clampChannel((red - 128) * contrast + 128 + brightness);
+    data[index + 1] = clampChannel((green - 128) * contrast + 128 + brightness);
+    data[index + 2] = clampChannel((blue - 128) * contrast + 128 + brightness);
+  }
+
+  return imageData;
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, format: string, quality: number) {
+  const mime = format === "jpeg" ? "image/jpeg" : format === "png" ? "image/png" : "image/webp";
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) reject(new Error("Export image impossible."));
+        else resolve(blob);
+      },
+      mime,
+      Math.max(0.01, Math.min(1, quality / 100)),
+    );
+  });
+}
+
+async function runLocalAiTool(file: File, tool: ToolKey, format: string, quality: number) {
+  if (tool === "remove-bg") {
+    const importFromUrl = new Function("url", "return import(url)") as (url: string) => Promise<{
+      removeBackground: (image: File) => Promise<Blob>;
+    }>;
+    const { removeBackground } = await importFromUrl("https://esm.sh/@imgly/background-removal@1.7.0");
+    return removeBackground(file);
+  }
+
+  const scale = tool === "upscale" ? 2 : 1;
+  const { canvas, context } = await canvasFromFile(file, scale);
+
+  if (tool === "denoise") {
+    context.filter = "blur(0.45px)";
+    context.drawImage(canvas, 0, 0);
+    context.filter = "none";
+  }
+
+  if (tool === "auto-enhance" || tool === "denoise" || tool === "restore") {
+    const data = context.getImageData(0, 0, canvas.width, canvas.height);
+    context.putImageData(enhanceImageData(data, tool === "auto-enhance" ? "enhance" : tool), 0, 0);
+  }
+
+  return canvasToBlob(canvas, format, quality);
+}
+
 function groupedTools() {
   return tools.reduce<Record<string, ToolConfig[]>>((acc, tool) => {
     acc[tool.group] = acc[tool.group] || [];
@@ -150,6 +240,7 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
   const [status, setStatus] = useState<"idle" | "upload" | "processing" | "done" | "error">("idle");
   const [message, setMessage] = useState("");
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
+  const [localOutputUrl, setLocalOutputUrl] = useState<string | null>(null);
   const groups = useMemo(groupedTools, []);
   const config = tools.find((item) => item.key === selectedTool) || tools[0];
 
@@ -172,6 +263,12 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
     setPreviewUrls(urls);
     return () => urls.forEach((url) => URL.revokeObjectURL(url));
   }, [files]);
+
+  useEffect(() => {
+    return () => {
+      if (localOutputUrl) URL.revokeObjectURL(localOutputUrl);
+    };
+  }, [localOutputUrl]);
 
   function buildOptions(inputUrls: string[]) {
     const toolName = selectedTool;
@@ -204,6 +301,8 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
     const accepted = nextFiles.filter((file) => file.type.startsWith("image/"));
     setFiles((prev) => (config.multi ? [...prev, ...accepted] : accepted.slice(0, 1)));
     setOutputUrl(null);
+    if (localOutputUrl) URL.revokeObjectURL(localOutputUrl);
+    setLocalOutputUrl(null);
     setMessage("");
     setStatus("idle");
   }
@@ -227,6 +326,22 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
 
     try {
       setOutputUrl(null);
+      if (localOutputUrl) URL.revokeObjectURL(localOutputUrl);
+      setLocalOutputUrl(null);
+
+      if (config.localAi) {
+        setStatus("processing");
+        setMessage(selectedTool === "remove-bg" ? "Chargement de l'IA locale dans le navigateur..." : "Traitement local en cours...");
+        const blob = await runLocalAiTool(files[0], selectedTool, format, quality);
+        const resultUrl = URL.createObjectURL(blob);
+        setLocalOutputUrl(resultUrl);
+        setOutputUrl(resultUrl);
+        setStatus("done");
+        setMessage("Resultat pret. Traitement fait sur ton appareil, sans cout serveur.");
+        downloadResult(resultUrl);
+        return;
+      }
+
       setStatus("upload");
       setMessage("Upload en cours...");
 
@@ -281,8 +396,9 @@ export default function ImageUploader({ tool = "convert" }: { tool?: ToolKey }) 
         <div className="tool-heading">
           <div>
             <h2 className="text-xl font-semibold">{config.label}</h2>
-            <p className="text-sm text-neutral-400">{config.multi ? "Selection multiple acceptee" : "Une image a la fois"}</p>
+            <p className="text-sm text-neutral-400">{config.localAi ? "IA dans le navigateur, sans cout serveur" : config.multi ? "Selection multiple acceptee" : "Une image a la fois"}</p>
           </div>
+          {config.localAi && <span className="status-pill">IA locale gratuite</span>}
           {config.aiExternal && <span className="status-pill">Provider IA requis</span>}
         </div>
 
